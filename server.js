@@ -4,17 +4,27 @@ const http = require('http'),
     fs = require('fs'),
     url = require('url');
 
-function handle_incomming_request(req, res){
+function handle_incoming_request(req, res){
     // Parse query string params and create object
     req.parsed_url = url.parse(req.url, true);
     let core_url = req.parsed_url.pathname;
 
-    console.log(core_url);
+    //  Check url to see what their asking for
+    if(core_url.substring(0, 7) === '/pages/') {
 
-    // if(core_url.substring(0, 7) === '/pages/') {
-    //     serve_page(req, res);
-    // }
+    } else if(core_url.substring(0 , 11) === '/templates/') {
+
+    } else if(core_url.substring(0 , 11) === '/content/') {
+
+    } else if(core_url.substring(0 , 11) === '/albums.json/') {
+
+    } else if(core_url.substring(0 , 11) === '/albums/') {
+
+    } else {
+
+    }
 }
 
-let s = http.createServer(handle_incomming_request);
+
+let s = http.createServer(handle_incoming_request);
 s.listen(8000);
