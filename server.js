@@ -43,6 +43,8 @@ function handle_incoming_request(req, res) {
         serve_page(req, res);
     } else if(core_url.substring(0, 11) == '/templates/') {
         serve_static_file("templates/" + core_url.substring(11), res);
+    } else if(core_url.substring(0, 9) == '/content/') {
+        serve_static_file("content/" + core_url.substring(11), res);
     }
 }
 
