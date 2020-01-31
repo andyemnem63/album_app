@@ -4,6 +4,34 @@ const http = require('http'),
     fs = require('fs'),
     url = require('url');
 
+function content_type_for_file(file) {
+    let ext = path.extname(file);
+    switch (ext.toLowerCase()) {
+        case '.html': return "text/html";
+        case ".js": return "text/javascript";
+        case ".css": return 'text/css';
+        case '.jpg': case '.jpeg': return 'image/jpeg';
+        default: return 'text/plain';
+    }
+}
+
+function serve_static_file(file, res) {
+    const rs = fs.createReadStream(file);
+    rs.on('error', (e) => {
+        res.writeHead(404, {"Content-Type" : "application/json"});
+        const out = {
+            error: "not_found",
+            message: "'" + file + "' not found"
+        };
+        res.end(JSON.stringify(out) + "\n");
+        return;
+    });
+
+    let ct = content_type_for_file(file);
+    res.writeHead(200, {"Content-Type": ct});
+    rs.pipe(res);
+}
+
 function handle_incoming_request(req, res) {
     // Parse query string params and create object
     req.parsed_url = url.parse(req.url, true);
@@ -13,8 +41,11 @@ function handle_incoming_request(req, res) {
     //  Check url to see what their asking for
     if (core_url.substring(0, 7) === '/pages/') {
         serve_page(req, res);
+    } else if(core_url.substring(0, 11) == '/templates/') {
+        serve_static_file("templates/" + core_url.substring(11), res);
     }
 }
+
 function serve_page(req, res) {
     let page = get_page_name(req);
 
@@ -48,4 +79,3 @@ function get_page_name(req) {
 
 let s = http.createServer(handle_incoming_request);
 s.listen(8080);
-console.log("w");
