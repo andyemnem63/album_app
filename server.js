@@ -48,3 +48,4 @@ function get_page_name(req) {
 
 let s = http.createServer(handle_incoming_request);
 s.listen(8080);
+console.log("w");
