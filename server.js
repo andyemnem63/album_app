@@ -32,19 +32,66 @@ function serve_static_file(file, res) {
     rs.pipe(res);
 }
 
+function load_album_list(callback) {
+    fs.readdir("albums", (err, files) => {
+        if (err) {
+            callback({error: "file_error",
+                message: JSON.stringify(err)});
+            return;
+        }
+
+        let only_dirs = [];
+
+        async.forEach(files, (element, cb) => {
+            fs.stat("albums/" + element, (err, stats) => {
+                if (err) {
+                    cb({
+                        error: "file_error",
+                        message: JSON.stringify(err)
+                    });
+                    return;
+                }
+                if (stats.isDirectory()) {
+                    only_dirs.push({name: element});
+                }
+                cb(null);
+            });
+        }, (err) => {
+            callback(err, err ? null : only_dirs);
+        });
+    });
+}
+
+function send_success(res, data) {
+    res.writeHead(200, {"Content-Type": "application/json"});
+    let output = { error: null, data: data};
+    res.end(JSON.stringify(output) + "\n");
+}
+
+function handle_list_albums(req, res) {
+    load_album_list((err, albums) => {
+        if (err) {
+            send_failure(res, 500, err);
+            return;
+        }
+        send_success(res, {albums: albums});
+    })
+}
+
 function handle_incoming_request(req, res) {
     // Parse query string params and create object
     req.parsed_url = url.parse(req.url, true);
     let core_url = req.parsed_url.pathname;
 
-    console.log(core_url.substring(0, 7));
     //  Check url to see what their asking for
     if (core_url.substring(0, 7) === '/pages/') {
         serve_page(req, res);
-    } else if(core_url.substring(0, 11) == '/templates/') {
+    } else if(core_url.substring(0, 11) === '/templates/') {
         serve_static_file("templates/" + core_url.substring(11), res);
-    } else if(core_url.substring(0, 9) == '/content/') {
+    } else if(core_url.substring(0, 9) === '/content/') {
         serve_static_file("content/" + core_url.substring(11), res);
+    } else if (core_url === '/albums.json') {
+        handle_list_albums(req, res)
     }
 }
 
